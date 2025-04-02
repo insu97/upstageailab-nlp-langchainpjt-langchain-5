@@ -5,7 +5,6 @@ RAG(Retrieval-Augmented Generation) 구조를 바탕으로 문서 검색 및 응
 
 - **프로젝트 기간:** 2025.03.01 ~ 2025.04.15  
 - **주제:** LangChain 기반 문서 검색 + Q&A 자동화 시스템  
-- **배포 링크:** [서비스 바로가기](https://example.com)
 
 ---
 
@@ -13,14 +12,14 @@ RAG(Retrieval-Augmented Generation) 구조를 바탕으로 문서 검색 및 응
 
 | 이름      | 역할             | GitHub                | 담당 기능                                         |
 |-----------|------------------|------------------------|--------------------------------------------------|
-| **홍길동** | 팀장 / 백엔드 개발자 | [GitHub 링크](#)       | LangChain 통합, FastAPI 백엔드 구성, API 설계 및 배포 |
-| **김철수** | MLOps 엔지니어     | [GitHub 링크](#)       | CI/CD 파이프라인 구축, 도커화, 클러스터 배포 및 모니터링 |
-| **이영희** | 데이터 사이언티스트 | [GitHub 링크](#)       | 문서 임베딩 처리, 벡터 DB 구축, LLM 파인튜닝           |
-| **박수진** | 데이터 엔지니어     | [GitHub 링크](#)       | 데이터 수집, 전처리, DVC 및 S3 데이터 관리            |
+| **김패캠** | 팀장 / 역할 | [GitHub 링크](#)       | LangChain 통합, FastAPI 백엔드 구성, API 설계 및 구조화 |
+| **박패캠** |  역할   | [GitHub 링크](#)       | CI/CD 파이프라인 구축, 도커화, 로컬/클라우드 환경 구성 |
+| **이패캠** | 역할 | [GitHub 링크](#)       | 문서 임베딩 처리, 벡터 DB 구축, LLM 파인튜닝           |
+| **최패캠** | 역할     | [GitHub 링크](#)       | 데이터 수집, 전처리, DVC 및 S3 데이터 관리            |
 
 ---
 
-# **MLOps 파이프라인 워크플로우**
+# **파이프라인 워크플로우**
 
 LangChain 기반 문서 QA 시스템의 구축 및 운영을 위한 파이프라인입니다.
 
@@ -51,20 +50,44 @@ LangChain 기반 문서 QA 시스템의 구축 및 운영을 위한 파이프라
 - MLflow를 통해 실험, 하이퍼파라미터, 모델 버전 관리
 - Optuna / Weights & Biases 연동 가능
 
-## **5. 백엔드 및 배포**
-1. **FastAPI 기반 API 서버 개발**
-2. **Docker로 컨테이너화 및 Amazon ECR 등록**
-3. **Kubernetes + Helm을 통한 배포 자동화**
-4. **API Gateway를 통한 외부 접근 및 인증 처리**
+## **5. 실행 환경 구성**
+1. **FastAPI 기반 API 서버 구성 (옵션)**
+2. **Docker로 로컬 환경에서 통합 실행 가능**
+3. **터미널 기반 CLI로 즉시 테스트 가능**
+4. **로컬 또는 클라우드 환경(AWS EC2 등) 모두 지원**
 
 ## **6. 모니터링 및 재학습 루프**
 1. **모델 성능 모니터링**
-   - Prometheus, Grafana를 통한 API 응답 시간 및 요청 수 모니터링
+   - Prometheus, Grafana를 통한 응답 시간 및 정확도 트래킹
 2. **데이터 Drift 탐지**
    - Evidently AI 활용
 3. **사용자 피드백 루프**
-   - 사용자의 thumbs-up/down, 불만족 응답 기록 저장
-   - 재학습 트리거를 위한 주기적 데이터 누적 및 학습 파이프라인 자동화
+   - 사용자의 thumbs-up/down 기록을 통해 성능 개선
+   - 재학습 조건 충족 시 자동 트리거되는 학습 파이프라인 구성
+
+---
+
+## **프로젝트 실행 방법**
+
+본 프로젝트는 웹 서비스 형태로 배포하지 않아도 되며,  
+**로컬 환경 또는 클라우드 인스턴스에서 터미널 기반으로 실행** 가능합니다.
+
+```bash
+# 1. 프로젝트 클론
+git clone https://github.com/your-org/langchain-qa-project.git
+cd langchain-qa-project
+
+# 2. 가상환경 설정 및 패키지 설치
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+# 3. 환경 변수 설정
+export OPENAI_API_KEY=your-api-key
+
+# 4. 실행
+python main.py
+
 
 ---
 
