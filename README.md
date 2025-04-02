@@ -88,7 +88,7 @@ export OPENAI_API_KEY=your-api-key
 
 # 4. 실행
 python main.py
-
+```
 
 ---
 
