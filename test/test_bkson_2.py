@@ -52,7 +52,7 @@ def initialize_models():
 def pdf_load_and_split(pdf_path, chunk_size=512, chunk_overlap=50):
     loader = PyMuPDFLoader(pdf_path)
     docs = loader.load()
-    print(f"문서의 페이지수: {len(docs)}")
+    # print(f"문서의 페이지수: {len(docs)}")
 
     docs = loader.load()
     text_chunks = []
@@ -71,11 +71,24 @@ def pdf_load_and_split(pdf_path, chunk_size=512, chunk_overlap=50):
         is_separator_regex=False
     )
     split_documents = text_splitter.split_documents(docs)
-    print(f"분할된 청크의 수: {len(split_documents)}")
+    # print(f"분할된 청크의 수: {len(split_documents)}")
 
     # 임베딩 모델을 통해 벡터스토어 구축하기
     _, embeddings = initialize_models()
-    vectorstore = FAISS.from_documents(documents=split_documents, embedding=embeddings)
+
+    # FAISS 인덱스 저장 경로 설정하기
+    index_path = "./faiss_index"
+    
+    # 인덱스가 존재하면 로드해서 불러오기, 없으면 구축 후 저장 (리소스 절약?)
+    if os.path.exists(index_path):
+        vectorstore = FAISS.load_local(index_path, embeddings, allow_dangerous_deserialization=True)
+        print("기존 FAISS 인덱스를 로드했습니다")
+    else:
+        vectorstore = FAISS.from_documents(documents=split_documents, embedding=embeddings)
+        vectorstore.save_local(index_path)
+        print("새로운 FAISS 인덱스를 생성 후 저장했습니다")
+
+    # vectorstore = FAISS.from_documents(documents=split_documents, embedding=embeddings)
     retriever = vectorstore.as_retriever()
 
     return text_chunks, split_documents, vectorstore, retriever
@@ -130,37 +143,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# pdf_reader = PdfReader("24_25_laws_of_the_game_01.pdf")
-# pdf_reader2 = PyMuPDFLoader("24_25_laws_of_the_game_01.pdf")
-# text_chunks = []
-# text_chunks2 = []
-
-# 모든 페이지의 텍스트 추출 -> 정보확인 용도 코드
-# pdf_reader.pages[150].extract_text()
-
-# Method 1
-# for page_num, page in enumerate(pdf_reader.pages):
-#     text = page.extract_text()
-#     if text.strip():  # 빈 페이지 제외        
-#         # 페이지 번호 정보 포함
-#         text_with_metadata = f"[페이지 {page_num + 1}] {text}"
-#         text_chunks.append(text_with_metadata)
-
-
-# # Method 2
-# docs = pdf_reader2.load()
-# # print(docs[150].page_content)
-# for page_num, page in enumerate(docs):
-#     text = docs[page_num].page_content
-#     if docs[page_num].page_content:  # 빈 페이지 제외        
-#         text_with_metadata = f"[페이지 {page_num + 1}] {text}"
-#         text_chunks2.append(text_with_metadata)
-
-
-
-
-
 
 
