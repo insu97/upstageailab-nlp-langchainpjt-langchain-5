@@ -55,7 +55,7 @@ def run_pipeline():
         chunk_size=st.session_state.chunk_size,
         chunk_overlap=st.session_state.chunk_overlap,
     )
-    st.session_state.embeddings = embedding(openai_api_key=st.session_state.openai_api_key)
+    st.session_state.embeddings = embedding(upstages_api_key=st.session_state.upstages_api_key)
 
     if st.session_state.method == "임베딩 기반":
         st.session_state.vectorstore = vectorstore(st.session_state.embeddings, st.session_state.split_documents)
@@ -77,7 +77,7 @@ def run_pipeline():
     st.session_state.chain = create_models(
         st.session_state.retriever,
         st.session_state.prompt,
-        st.session_state.openai_api_key,
+        st.session_state.upstages_api_key,
     )
 
 
@@ -106,7 +106,7 @@ def render_qa():
 
         request_input = {"context": pdf_contents, "answer": response}
         st.session_state.groundedness_check = UpstageGroundednessCheck(
-            api_key=st.session_state.openai_api_key,
+            api_key=st.session_state.upstages_api_key,
             model="solar-pro",
             temperature=0,
             base_url="https://api.upstage.ai/v1",
@@ -123,7 +123,7 @@ def render_qa():
             tavily_chain = create_models(
                 st.session_state.tavily_retriever,
                 st.session_state.prompt,
-                st.session_state.openai_api_key,
+                st.session_state.tavily_api_key,
             )
             tavily_response = tavily_chain.invoke(st.session_state.question)
             st.markdown(tavily_response)
@@ -131,7 +131,7 @@ def render_qa():
 
 def main():
     load_dotenv()
-    st.session_state.openai_api_key = os.getenv("OPENAI_API_KEY")
+    st.session_state.upstages_api_key = os.getenv("UPSTAGE_API_KEY")
     st.session_state.tavily_api_key = os.getenv("TAVILY_API_KEY")
     
     setup_page()
