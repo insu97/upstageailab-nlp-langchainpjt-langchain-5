@@ -300,3 +300,9 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,linux,windows,python,jupyternotebooks,dotenv,visualstudiocode,vim
+
+
+data/
+faiss_index_dir/
+faiss_index_semantic_dir/
+semantic_chunks.pkl
