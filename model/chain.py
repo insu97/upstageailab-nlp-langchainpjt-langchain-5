@@ -56,9 +56,8 @@ def create_tavily_search_chain(api_key):
 
     def search_and_format(inputs):
         question = str(inputs.get("question", "")).strip()
-        history = str(inputs.get("history", "")).strip()
-        full_query = f"{history}\n{question}" if history else question
-        response = client.search(query=full_query)
+        # history = str(inputs.get("history", "")).strip()
+        response = client.search(query=question)
         # response는 dict 형태라고 가정합니다.
         md = f"**검색어:** {response.get('query', '')}\n\n"
         md += f"**응답 시간:** {response.get('response_time', '')}초\n\n"

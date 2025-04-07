@@ -128,8 +128,8 @@ def render_qa():
 
         
         # 대화 내역에 현재 대화 추가
-        st.session_state.conversation_history.append("User: " + st.session_state.question)
-        st.session_state.conversation_history.append("Assistant: " + response)
+        # st.session_state.conversation_history.append("User: " + st.session_state.question)
+        # st.session_state.conversation_history.append("Assistant: " + response)
 
 def main():
     load_dotenv()
