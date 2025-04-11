@@ -1,3 +1,4 @@
+# app.py
 import sys, os
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
@@ -11,22 +12,21 @@ from embedding.embeddings import embedding
 from vectorDB.chunker import semantic_chunker
 from vectorDB.vectorstore import vectorstore, vectorstore_semantic
 from retriever.retriever import retriever
-from model.chain import create_models
+from model.chain import create_models, create_tavily_search_chain
 
 from langchain_core.prompts import PromptTemplate
 from langchain_upstage import UpstageGroundednessCheck
 from langchain_community.retrievers import TavilySearchAPIRetriever
 
-
 def initialize_session():
     if "rag_state" not in st.session_state:
         st.session_state.rag_state = False
-
+    if "conversation_history" not in st.session_state:
+        st.session_state.conversation_history = []  # 초기화 추가
 
 def setup_page():
     st.set_page_config(layout="wide")
     st.title("LangChain Project")
-
 
 def sidebar_settings():
     st.subheader("Settings")
@@ -41,12 +41,14 @@ def sidebar_settings():
         "너는 답변을 할 때, 반드시 종목을 확인해서 답변해줘야해.\n"
         "너는 답변을 할 때, 반드시 다음과 같은 형식으로 답변해줘야해.\n"
         "1.\n2.\n3.\n\n"
-        "#Question: \n{question} \n#Context: \n{context} \n\n#Answer:"
+        # "#Chat History:\n{history}\n"
+        "#Question:\n{question}\n"
+        "#Context:\n{context}\n\n"
+        "#Answer:"
     )
     st.session_state.new_prompt = st.text_area("프롬프트를 작성해주세요!", value=default_prompt, height=350, key="prompt_write")
     if st.button("실행"):
         st.session_state.rag_state = True
-
 
 def run_pipeline():
     st.session_state.pdf_files, st.session_state.all_docs = load_documents()
@@ -55,7 +57,7 @@ def run_pipeline():
         chunk_size=st.session_state.chunk_size,
         chunk_overlap=st.session_state.chunk_overlap,
     )
-    st.session_state.embeddings = embedding(openai_api_key=st.session_state.openai_api_key)
+    st.session_state.embeddings = embedding(upstages_api_key=st.session_state.upstages_api_key)
 
     if st.session_state.method == "임베딩 기반":
         st.session_state.vectorstore = vectorstore(st.session_state.embeddings, st.session_state.split_documents)
@@ -77,9 +79,8 @@ def run_pipeline():
     st.session_state.chain = create_models(
         st.session_state.retriever,
         st.session_state.prompt,
-        st.session_state.openai_api_key,
+        st.session_state.upstages_api_key,
     )
-
 
 def render_result():
     st.subheader("Result")
@@ -90,13 +91,17 @@ def render_result():
         st.write(f"➡️ 시멘틱 청크의 수: {len(st.session_state.semantic_chunks)}")
     st.text_area("➡️ 프롬프트 내용", st.session_state.prompt.template, height=350)
 
-
 def render_qa():
     st.subheader("QA")
     st.markdown("---")
-    st.session_state.question = st.text_area("질문을 해주세요!", "", height=200)
-    if st.button("실행", key="execute"):
-        response = st.session_state.chain.invoke(st.session_state.question)
+
+    # st.session_state.question = st.text_area("질문을 해주세요!", "", height=200)
+
+    if question := st.chat_input("Ask a question!"):
+        st.session_state.question = question
+        # 최근 10개 대화 내역을 history로 생성 (대화 내역이 없으면 빈 문자열)
+        history_str = "\n".join(st.session_state.conversation_history[-10:]) if st.session_state.conversation_history else ""
+        response = st.session_state.chain.invoke({"question": st.session_state.question, "history": history_str})
         st.markdown("---")
         st.subheader("Groundedness Check")
 
@@ -106,42 +111,48 @@ def render_qa():
 
         request_input = {"context": pdf_contents, "answer": response}
         st.session_state.groundedness_check = UpstageGroundednessCheck(
-            api_key=st.session_state.openai_api_key,
+            api_key=st.session_state.upstages_api_key,
             model="solar-pro",
             temperature=0,
             base_url="https://api.upstage.ai/v1",
         )
         st.session_state.gc_result = st.session_state.groundedness_check.invoke(request_input)
+        with st.chat_message("user"):
+            st.markdown(st.session_state.question)
 
         if st.session_state.gc_result.lower().startswith("grounded"):
-            st.text("✅ Groundedness check passed")
-            st.markdown(response)
+            with st.chat_message("assistant"):
+                st.text("✅ Groundedness check passed")
+                st.markdown(response)
         else:
-            st.text("❌ Groundedness check failed")
-            st.text("🔍 Tavily API를 사용하여 웹 검색 결과를 가져옵니다.")
-            st.session_state.tavily_retriever = TavilySearchAPIRetriever(k=3)
-            tavily_chain = create_models(
-                st.session_state.tavily_retriever,
-                st.session_state.prompt,
-                st.session_state.openai_api_key,
-            )
-            tavily_response = tavily_chain.invoke(st.session_state.question)
-            st.markdown(tavily_response)
+            with st.chat_message("assistant"):
+                st.text("❌ Groundedness check failed")
+                st.text("🔍 Tavily API를 사용하여 웹 검색 결과를 가져옵니다.")
+                # st.session_state.tavily_retriever = TavilySearchAPIRetriever(k=3)
+                tavily_chain = create_tavily_search_chain(st.session_state.tavily_api_key)
+                tavily_response = tavily_chain.invoke({"question": st.session_state.question, "history": history_str})
+                st.markdown(tavily_response)
 
+        
+        # 대화 내역에 현재 대화 추가
+        # st.session_state.conversation_history.append("User: " + st.session_state.question)
+        # st.session_state.conversation_history.append("Assistant: " + response)
 
 def main():
     load_dotenv()
-    st.session_state.openai_api_key = os.getenv("OPENAI_API_KEY")
+    st.session_state.upstages_api_key = os.getenv("UPSTAGE_API_KEY")
     st.session_state.tavily_api_key = os.getenv("TAVILY_API_KEY")
     
+    # 여기서 session_state 초기화를 먼저 수행합니다.
+    initialize_session()
+
     setup_page()
     col1, col2, col3 = st.columns([1, 1, 2], border=True)
 
     with col1:
-            sidebar_settings()
+        sidebar_settings()
 
     if st.session_state.get("rag_state"):
-        
         with col1:
             run_pipeline()
         with col2:
@@ -149,7 +160,5 @@ def main():
         with col3:
             render_qa()
 
-
 if __name__ == "__main__":
-    initialize_session()
     main()
