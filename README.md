@@ -13,8 +13,8 @@ RAG(Retrieval-Augmented Generation) 구조를 바탕으로 문서 검색 및 응
 
 | 이름      | 역할             | GitHub                | 담당 기능                                         |
 |-----------|------------------|------------------------|--------------------------------------------------|
-| **손봉교** | 팀장  | [GitHub 링크](#https://github.com/imsonn94)       | streamlit 초기 적용, Chat History 구현, 코드 리뷰 |
-| **박인수** | 팀원 | [GitHub 링크](#https://github.com/insu97)       | streamlit UI 개선, SemanticChuncker 적용, 코드 리펙토링 |
+| **손봉교** | 팀장  | [GitHub 링크](https://github.com/imsonn94)       | streamlit 초기 적용, Chat History 구현, 코드 리뷰 |
+| **박인수** | 팀원 | [GitHub 링크](https://github.com/insu97)       | streamlit UI 개선, SemanticChuncker 적용, 코드 리펙토링 |
 
 
 ---
